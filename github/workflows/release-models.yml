@@ -1,0 +1,137 @@
+name: Release ONNX Models
+
+on:
+  workflow_dispatch:  # 手動実行を許可
+  # push:
+  #   tags:
+  #     - 'models-v*'  # models-v1, models-v2 などのタグでトリガー
+
+permissions:
+  contents: write
+
+jobs:
+  export-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🧾 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: 📦 Install YomiToku
+        run: |
+          pip install yomitoku torch --no-cache-dir
+          pip list | grep yomitoku
+
+      - name: 📥 Export ONNX models
+        run: |
+          mkdir -p models
+          python3 << 'EOF'
+          from yomitoku import DocumentAnalyzer
+          import os
+
+          print("🔄 Initializing YomiToku DocumentAnalyzer...")
+          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+
+          # Export detector model
+          print("📥 Exporting detector model to ONNX...")
+          detector = analyzer.detector
+          detector.infer_onnx = True
+          detector.export_model_to_onnx("./models/text_detector.onnx")
+
+          # Verify detector model
+          detector_size = os.path.getsize("./models/text_detector.onnx")
+          print(f"✅ Detector model exported: {detector_size / 1024 / 1024:.2f} MB")
+
+          # Export recognizer model
+          print("📥 Exporting recognizer model to ONNX...")
+          recognizer = analyzer.recognizer
+          recognizer.infer_onnx = True
+          recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+
+          # Verify recognizer model
+          recognizer_size = os.path.getsize("./models/text_recognizer.onnx")
+          print(f"✅ Recognizer model exported: {recognizer_size / 1024 / 1024:.2f} MB")
+
+          # Total size
+          total_size = (detector_size + recognizer_size) / 1024 / 1024
+          print(f"📊 Total size: {total_size:.2f} MB")
+          EOF
+
+      - name: 📋 Verify model files
+        run: |
+          echo "Checking exported model files..."
+          ls -lh models/*.onnx
+
+          # Verify file sizes (should be at least 1MB each)
+          for file in models/*.onnx; do
+            size=$(stat -c%s "$file")
+            if [ "$size" -lt 1000000 ]; then
+              echo "❌ Error: $file is too small (${size} bytes)"
+              exit 1
+            fi
+            echo "✅ $file: $(($size / 1024 / 1024)) MB"
+          done
+
+      - name: 🏷️ Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: models-v1
+          name: YomiToku ONNX Models v1
+          body: |
+            # YomiToku ONNX Models
+
+            このリリースには、YomiToku Liteで使用するONNXモデルファイルが含まれています。
+
+            ## 📦 含まれるファイル
+
+            - **text_detector.onnx** - テキスト検出モデル（DBNet v2）
+            - **text_recognizer.onnx** - テキスト認識モデル（PARSeq）
+
+            ## 🚀 使用方法
+
+            ### GitHub Pagesで自動的に読み込む
+
+            このリリースのモデルファイルは、GitHub Pagesデプロイ時に自動的に読み込まれます。
+            デモサイト: https://s4na.github.io/yomitoku-demo/
+
+            ### 手動ダウンロード
+
+            ```bash
+            # リポジトリのmodelsディレクトリで実行
+            wget https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_detector.onnx
+            wget https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_recognizer.onnx
+            ```
+
+            ## 📄 ライセンス
+
+            これらのモデルは **CC BY-NC-SA 4.0** ライセンスで提供されています：
+            - ✅ 個人利用・研究目的は無料
+            - ✅ 非商用プロジェクトは無料
+            - ❌ 商用利用には別途ライセンスが必要
+
+            詳細: https://www.mlism.com/
+
+            ## 🙏 謝辞
+
+            これらのモデルは [YomiToku](https://github.com/kotaro-kinoshita/yomitoku) プロジェクトから提供されています。
+          draft: false
+          prerelease: false
+          files: |
+            models/text_detector.onnx
+            models/text_recognizer.onnx
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: ✅ Release Complete
+        run: |
+          echo "🎉 Models successfully released!"
+          echo "📥 Download URLs:"
+          echo "  - https://github.com/${{ github.repository }}/releases/download/models-v1/text_detector.onnx"
+          echo "  - https://github.com/${{ github.repository }}/releases/download/models-v1/text_recognizer.onnx"
