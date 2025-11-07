@@ -212,13 +212,13 @@ from yomitoku import DocumentAnalyzer
 analyzer = DocumentAnalyzer(configs={"device": "cpu"})
 
 # モデルをONNX形式でエクスポート
-detector = analyzer.detector
-detector.infer_onnx = True
-detector.export_model_to_onnx("./models/text_detector.onnx")
+text_detector = analyzer.text_detector
+text_detector.infer_onnx = True
+text_detector.convert_onnx("./models/text_detector.onnx")
 
-recognizer = analyzer.recognizer
-recognizer.infer_onnx = True
-recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+text_recognizer = analyzer.text_recognizer
+text_recognizer.infer_onnx = True
+text_recognizer.convert_onnx("./models/text_recognizer.onnx")
 
 print("✅ Models exported successfully!")
 EOF
