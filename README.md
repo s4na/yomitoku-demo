@@ -286,7 +286,33 @@ GitHub Actionsを使って、モデルファイルを自動的にGitHub Releases
 
 ## 📄 ライセンス
 
-MIT License
+このプロジェクトは、**コード**と**モデル**で異なるライセンスが適用されます：
+
+### デモアプリケーションコード
+
+このリポジトリのコード（HTML、JavaScript、CSS等）は **MIT License** でライセンスされています。
+
+```
+Copyright (c) 2025 s4na
+```
+
+詳細は [LICENSE](LICENSE) ファイルを参照してください。
+
+### YomiToku ONNXモデル
+
+YomiTokuモデルは **CC BY-NC-SA 4.0** ライセンスで提供されています：
+
+- ✅ **個人利用**: 無料
+- ✅ **研究目的**: 無料
+- ✅ **非商用プロジェクト**: 無料
+- ❌ **商用利用**: 別途ライセンスが必要（[MLism株式会社](https://www.mlism.com/)に問い合わせ）
+
+**重要**: モデルファイルはこのリポジトリには含まれていません。モデルを使用する際は、上記のCC BY-NC-SA 4.0ライセンス条件に従う必要があります。
+
+モデルの詳細:
+- ライセンス: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+- 提供元: [YomiToku](https://github.com/kotaro-kinoshita/yomitoku)
+- 商用利用: https://www.mlism.com/
 
 ## 🤝 コントリビューション
 
