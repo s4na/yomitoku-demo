@@ -25,6 +25,41 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Install YomiToku
+        run: |
+          pip install yomitoku torch --no-cache-dir
+
+      - name: 📥 Export ONNX models
+        run: |
+          python3 << 'EOF'
+          from yomitoku import DocumentAnalyzer
+          import os
+
+          print("🔄 Exporting models for GitHub Pages...")
+          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+
+          # Export detector
+          detector = analyzer.detector
+          detector.infer_onnx = True
+          detector.export_model_to_onnx("./models/text_detector.onnx")
+
+          detector_size = os.path.getsize("./models/text_detector.onnx")
+          print(f"✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
+
+          # Export recognizer
+          recognizer = analyzer.recognizer
+          recognizer.infer_onnx = True
+          recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+
+          recognizer_size = os.path.getsize("./models/text_recognizer.onnx")
+          print(f"✅ Recognizer: {recognizer_size / 1024 / 1024:.2f} MB")
+          EOF
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
