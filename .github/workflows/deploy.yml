@@ -47,43 +47,22 @@ jobs:
           mkdir -p ./models
           python3 << 'EOF'
           import os
+          from yomitoku import DocumentAnalyzer
 
           print("🔄 Exporting models for GitHub Pages...")
 
-          try:
-              # Try importing from the text_detector and text_recognizer modules directly
-              from yomitoku.text_detector.v2.text_detector import TextDetector
-              from yomitoku.text_recognizer.text_recognizer import TextRecognizer
+          # Initialize DocumentAnalyzer and access detector/recognizer through it
+          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
 
-              print("📦 Initializing detector...")
-              detector = TextDetector(configs={"device": "cpu"})
-              detector.infer_onnx = True
-              detector.export_model_to_onnx("./models/text_detector.onnx")
-              print("✅ Detector exported")
+          print("📦 Exporting detector...")
+          analyzer.text_detector.infer_onnx = True
+          analyzer.text_detector.export_model_to_onnx("./models/text_detector.onnx")
+          print("✅ Detector exported")
 
-              print("📦 Initializing recognizer...")
-              recognizer = TextRecognizer(configs={"device": "cpu"})
-              recognizer.infer_onnx = True
-              recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
-              print("✅ Recognizer exported")
-
-          except Exception as e:
-              print(f"❌ Error during export: {e}")
-              print("📋 Attempting alternative method...")
-
-              # Alternative: try to access models through DocumentAnalyzer's internal structure
-              from yomitoku import DocumentAnalyzer
-              import inspect
-
-              analyzer = DocumentAnalyzer(configs={"device": "cpu"})
-
-              # List all attributes to debug
-              print("Available attributes:")
-              for attr in dir(analyzer):
-                  if not attr.startswith('_'):
-                      print(f"  - {attr}")
-
-              raise Exception("Please check yomitoku version and API compatibility")
+          print("📦 Exporting recognizer...")
+          analyzer.text_recognizer.infer_onnx = True
+          analyzer.text_recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+          print("✅ Recognizer exported")
 
           # Verify file sizes
           detector_size = os.path.getsize("./models/text_detector.onnx")
