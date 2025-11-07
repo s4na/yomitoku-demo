@@ -26,19 +26,28 @@ jobs:
         uses: actions/checkout@v4
 
       - name: 📥 Download ONNX models from HuggingFace
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           mkdir -p ./models
 
           echo "📦 Downloading YomiToku ONNX models from HuggingFace..."
 
+          # Set authorization header if token is available
+          AUTH_HEADER=""
+          if [ -n "$HF_TOKEN" ]; then
+            echo "🔑 Using HuggingFace token for authentication"
+            AUTH_HEADER="-H \"Authorization: Bearer $HF_TOKEN\""
+          fi
+
           # Download text detector model
           echo "⬇️ Downloading Text Detector..."
-          curl -L -f "https://huggingface.co/kotaro-kinoshita/yomitoku-text-detector-dbnet-v2/resolve/main/model.onnx" \
+          eval curl -L -f $AUTH_HEADER "https://huggingface.co/kotaro-kinoshita/yomitoku-text-detector-dbnet-v2/resolve/main/model.onnx" \
             -o ./models/text_detector.onnx
 
           # Download text recognizer model
           echo "⬇️ Downloading Text Recognizer..."
-          curl -L -f "https://huggingface.co/kotaro-kinoshita/yomitoku-text-recognizer-parseq/resolve/main/model.onnx" \
+          eval curl -L -f $AUTH_HEADER "https://huggingface.co/kotaro-kinoshita/yomitoku-text-recognizer-parseq/resolve/main/model.onnx" \
             -o ./models/text_recognizer.onnx
 
           # Verify downloads
