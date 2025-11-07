@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YomiToku Lite - ブラウザ版OCRデモ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📖 YomiToku Lite</h1>
+            <p>完全ブラウザ上で動作する日本語OCRデモ（ONNX Runtime Web）</p>
+        </header>
+
+        <main>
+            <section class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <input type="file" id="imageInput" accept="image/*" hidden>
+                    <label for="imageInput" class="upload-label">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <span>画像をクリックまたはドロップしてアップロード</span>
+                        <small>JPG, PNG, GIF (最大 10MB)</small>
+                    </label>
+                </div>
+            </section>
+
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-container">
+                    <div class="canvas-wrapper">
+                        <h3>📷 検出結果</h3>
+                        <canvas id="outputCanvas"></canvas>
+                    </div>
+                    <div class="text-output">
+                        <h3>📝 認識テキスト</h3>
+                        <div id="recognizedText" class="text-content">
+                            <p class="placeholder">テキストがここに表示されます...</p>
+                        </div>
+                        <button id="copyButton" class="copy-btn" style="display: none;">
+                            📋 テキストをコピー
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="status-section">
+                <div id="statusMessage" class="status-message"></div>
+                <div id="progressBar" class="progress-bar" style="display: none;">
+                    <div class="progress-fill"></div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>
+                Powered by <a href="https://github.com/kotaro-kinoshita/yomitoku" target="_blank">YomiToku</a>
+                | <a href="https://onnxruntime.ai/" target="_blank">ONNX Runtime</a>
+            </p>
+            <p class="note">
+                ⚠️ すべての処理はブラウザ内で完結します。画像データはサーバーに送信されません。
+            </p>
+        </footer>
+    </div>
+
+    <!-- ONNX Runtime Web -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/ort.min.js"></script>
+    <!-- Main Application -->
+    <script src="main.js"></script>
+</body>
+</html>

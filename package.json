@@ -1,0 +1,29 @@
+{
+  "name": "yomitoku-lite",
+  "version": "1.0.0",
+  "description": "Browser-based Japanese OCR demo using ONNX Runtime Web",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s4na/yomitoku-demo.git"
+  },
+  "keywords": [
+    "ocr",
+    "japanese",
+    "onnx",
+    "yomitoku",
+    "machine-learning"
+  ],
+  "author": "s4na",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/s4na/yomitoku-demo/issues"
+  },
+  "homepage": "https://github.com/s4na/yomitoku-demo#readme",
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

@@ -1,0 +1,329 @@
+/* YomiToku Lite - Modern CSS */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --background: #f9fafb;
+    --surface: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    background: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header */
+header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding: 2rem 0;
+}
+
+header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Upload Section */
+.upload-section {
+    margin-bottom: 2rem;
+}
+
+.upload-area {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: 1rem;
+    padding: 3rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: #f0f9ff;
+}
+
+.upload-area.drag-over {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+    transform: scale(1.02);
+}
+
+.upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.upload-label svg {
+    color: var(--primary-color);
+}
+
+.upload-label span {
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.upload-label small {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Result Section */
+.result-section {
+    margin-bottom: 2rem;
+}
+
+.result-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+@media (max-width: 768px) {
+    .result-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.canvas-wrapper,
+.text-output {
+    background: var(--surface);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.canvas-wrapper h3,
+.text-output h3 {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+#outputCanvas {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+}
+
+.text-content {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    min-height: 200px;
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95rem;
+    line-height: 1.8;
+}
+
+.text-content pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.text-content .placeholder {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.copy-btn {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow);
+}
+
+/* Status Section */
+.status-section {
+    margin-bottom: 2rem;
+}
+
+.status-message {
+    padding: 1rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 1rem;
+    display: none;
+}
+
+.status-message:not(:empty) {
+    display: block;
+}
+
+.status-message.info {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-message.success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-message.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-message.error {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-message.loading {
+    background: #e0e7ff;
+    color: #3730a3;
+}
+
+.progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--primary-color);
+    animation: progress 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% {
+        transform: translateX(-100%);
+    }
+    50% {
+        transform: translateX(100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Footer */
+footer {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--text-secondary);
+    border-top: 1px solid var(--border);
+    margin-top: 3rem;
+}
+
+footer p {
+    margin-bottom: 0.5rem;
+}
+
+footer a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+footer a:hover {
+    text-decoration: underline;
+}
+
+.note {
+    font-size: 0.9rem;
+    color: var(--warning-color);
+    margin-top: 1rem;
+}
+
+/* Scrollbar styling */
+.text-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.text-content::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+.text-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+.text-content::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .container {
+        padding: 1rem;
+    }
+
+    header h1 {
+        font-size: 2rem;
+    }
+
+    header p {
+        font-size: 1rem;
+    }
+
+    .upload-area {
+        padding: 2rem 1rem;
+    }
+
+    .canvas-wrapper,
+    .text-output {
+        padding: 1rem;
+    }
+}
