@@ -238,10 +238,36 @@ python -m http.server 8000
 **注意**: HuggingFaceのモデルへのアクセスに制限がある場合、このスクリプトは失敗します。
 その場合はオプション1を使用してください。
 
-#### オプション 3: GitHub Releases（準備中）
+#### オプション 3: GitHub Actionsで自動リリース（推奨・GitHub Pages用）
 
-モデルファイルをGitHub Releasesにアップロードすることで、GitHub Pagesで直接読み込めるようになります。
-詳細は [`models/README.md`](models/README.md) を参照してください。
+GitHub Actionsを使って、モデルファイルを自動的にGitHub Releasesにアップロードできます。
+
+**セットアップ手順**:
+
+1. ワークフローファイルを配置:
+   ```bash
+   mkdir -p .github/workflows
+   cp workflows-templates/release-models.yml .github/workflows/
+   git add .github/workflows/release-models.yml
+   git commit -m "Add model release workflow"
+   git push
+   ```
+
+2. GitHubリポジトリの **Actions** タブに移動
+
+3. 左サイドバーから **Release ONNX Models** ワークフローを選択
+
+4. **Run workflow** ボタンをクリックして実行
+
+ワークフローが完了すると（約5-10分）、モデルファイルが `models-v1` リリースに自動的にアップロードされ、GitHub Pagesで利用可能になります。
+
+**仕組み**:
+- YomiToku Pythonパッケージをインストール
+- モデルをONNX形式でエクスポート（約20-30MB）
+- GitHub Releasesに自動アップロード
+- `main.js` が自動的にこのリリースからモデルを読み込む
+
+ワークフローテンプレート: [`workflows-templates/release-models.yml`](workflows-templates/release-models.yml)
 
 **トラブルシューティング**:
 - ブラウザのコンソールでエラーを確認
