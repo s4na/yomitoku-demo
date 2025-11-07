@@ -185,42 +185,69 @@ git push origin main
 
 ### ⚠️ モデルが読み込めない場合
 
-**エラー**: `❌ モデルの読み込みに失敗しました: failed to load external data file: ./models/text_detector.onnx`
+**エラー**: `❌ モデルの読み込みに失敗しました`
 
-**原因**: モデルファイルがダウンロードされていないか、GitHubPagesに含まれていません。
+**原因**: モデルファイルがダウンロードされていないか、HuggingFaceのモデルへのアクセスが制限されています。
 
 **解決方法**:
 
-#### オプション 1: ローカルで実行する
+#### オプション 1: YomiToku Pythonパッケージを使用（推奨）
 
 ```bash
 # 1. リポジトリをクローン
 git clone https://github.com/s4na/yomitoku-demo.git
 cd yomitoku-demo
 
-# 2. モデルをダウンロード
-bash models/download_models.sh
+# 2. YomiTokuをインストール
+pip install yomitoku
 
-# 3. ローカルサーバーを起動
+# 3. モデルをエクスポート
+python3 << 'EOF'
+from yomitoku import DocumentAnalyzer
+
+analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+
+# モデルをONNX形式でエクスポート
+detector = analyzer.detector
+detector.infer_onnx = True
+detector.export_model_to_onnx("./models/text_detector.onnx")
+
+recognizer = analyzer.recognizer
+recognizer.infer_onnx = True
+recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+
+print("✅ Models exported successfully!")
+EOF
+
+# 4. ローカルサーバーを起動
 python -m http.server 8000
 
-# 4. ブラウザでアクセス
+# 5. ブラウザでアクセス
 # http://localhost:8000
 ```
 
-#### オプション 2: GitHub Actionsでデプロイ
+#### オプション 2: 自動ダウンロードスクリプト（実験的）
 
-モデルは GitHub Actions の実行時に自動的にダウンロードされ、GitHub Pages にデプロイされます。
-ワークフローが正常に完了していることを確認してください。
+```bash
+git clone https://github.com/s4na/yomitoku-demo.git
+cd yomitoku-demo
+bash models/download_models.sh  # HuggingFaceから直接ダウンロード
+python -m http.server 8000
+```
 
-**確認事項**:
+**注意**: HuggingFaceのモデルへのアクセスに制限がある場合、このスクリプトは失敗します。
+その場合はオプション1を使用してください。
+
+#### オプション 3: GitHub Releases（準備中）
+
+モデルファイルをGitHub Releasesにアップロードすることで、GitHub Pagesで直接読み込めるようになります。
+詳細は [`models/README.md`](models/README.md) を参照してください。
+
+**トラブルシューティング**:
 - ブラウザのコンソールでエラーを確認
-- モデルファイルのパスが正しいか確認 (`./models/text_detector.onnx`, `./models/text_recognizer.onnx`)
+- モデルファイルのサイズを確認: `ls -lh models/*.onnx`（1MB以上であること）
 - GitHub Actions のログでモデルダウンロードステップが成功しているか確認
-- CORS設定を確認（GitHub Pages では通常問題なし）
-
-**注意**: 現在、YomiTokuの公式ONNXモデルへのアクセスに問題がある可能性があります。
-この場合、代替のモデルソースを使用するか、モデルを手動で配置する必要があります。
+- 詳細なセットアップ手順: [`models/README.md`](models/README.md)
 
 ## 📚 参考リンク
 

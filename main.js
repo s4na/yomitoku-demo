@@ -53,30 +53,52 @@ class YomiTokuLite {
             // ONNX Runtime の設定
             ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
 
-            // モデルファイルの存在確認
-            const detectorPath = './models/text_detector.onnx';
-            const recognizerPath = './models/text_recognizer.onnx';
+            // モデルパスの候補（優先順位順）
+            const modelSources = [
+                {
+                    name: 'ローカルファイル',
+                    detector: './models/text_detector.onnx',
+                    recognizer: './models/text_recognizer.onnx'
+                },
+                {
+                    name: 'GitHub Releases',
+                    detector: 'https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_detector.onnx',
+                    recognizer: 'https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_recognizer.onnx'
+                }
+            ];
 
-            // 検出モデル読み込み
-            this.updateStatus('📥 テキスト検出モデル読み込み中...', 'loading');
-            try {
-                this.detectorSession = await ort.InferenceSession.create(detectorPath, {
-                    executionProviders: ['wasm']
-                });
-            } catch (err) {
-                console.error('検出モデルエラー:', err);
-                throw new Error('テキスト検出モデル (text_detector.onnx) が見つかりません。\n\nセットアップ手順:\n1. リポジトリをクローン\n2. models/download_models.sh を実行\n3. モデルファイルをmodelsディレクトリに配置');
+            let loadSuccess = false;
+            let lastError = null;
+
+            // 各ソースを順番に試す
+            for (const source of modelSources) {
+                try {
+                    console.log(`モデル読み込み試行: ${source.name}`);
+
+                    // 検出モデル読み込み
+                    this.updateStatus(`📥 テキスト検出モデル読み込み中 (${source.name})...`, 'loading');
+                    this.detectorSession = await ort.InferenceSession.create(source.detector, {
+                        executionProviders: ['wasm']
+                    });
+
+                    // 認識モデル読み込み
+                    this.updateStatus(`📥 テキスト認識モデル読み込み中 (${source.name})...`, 'loading');
+                    this.recognizerSession = await ort.InferenceSession.create(source.recognizer, {
+                        executionProviders: ['wasm']
+                    });
+
+                    console.log(`✅ モデル読み込み成功: ${source.name}`);
+                    loadSuccess = true;
+                    break;
+                } catch (err) {
+                    console.warn(`${source.name}からの読み込み失敗:`, err);
+                    lastError = err;
+                    continue;
+                }
             }
 
-            // 認識モデル読み込み
-            this.updateStatus('📥 テキスト認識モデル読み込み中...', 'loading');
-            try {
-                this.recognizerSession = await ort.InferenceSession.create(recognizerPath, {
-                    executionProviders: ['wasm']
-                });
-            } catch (err) {
-                console.error('認識モデルエラー:', err);
-                throw new Error('テキスト認識モデル (text_recognizer.onnx) が見つかりません。');
+            if (!loadSuccess) {
+                throw new Error('すべてのモデルソースからの読み込みに失敗しました');
             }
 
             this.isModelLoaded = true;
@@ -91,11 +113,12 @@ class YomiTokuLite {
                 '❌ モデルファイルが見つかりません\n\n' +
                 'YomiToku Liteを使用するには、ONNXモデルファイルが必要です。\n\n' +
                 '【解決方法】\n' +
-                'このデモは開発中です。モデルファイルのホスティング方法を準備中です。\n\n' +
                 'ローカルで実行する場合:\n' +
-                '1. リポジトリをクローン: git clone [repo-url]\n' +
-                '2. models/download_models.sh を実行\n' +
-                '3. ローカルサーバーで起動: python -m http.server 8000\n\n' +
+                '1. リポジトリをクローン\n' +
+                '2. cd yomitoku-demo\n' +
+                '3. bash models/download_models.sh を実行\n' +
+                '4. python -m http.server 8000 でサーバー起動\n' +
+                '5. http://localhost:8000 にアクセス\n\n' +
                 '詳細エラー: ' + errorMsg,
                 'error'
             );
@@ -115,22 +138,27 @@ class YomiTokuLite {
                     <h3 style="margin-top: 0; color: #856404;">📋 モデルセットアップが必要です</h3>
                     <p>このデモを動作させるには、YomiTokuのONNXモデルファイルが必要です。</p>
 
-                    <h4>ローカルで実行する場合:</h4>
+                    <h4>🚀 ローカルで実行する場合（推奨）:</h4>
                     <ol>
-                        <li>リポジトリをクローン</li>
-                        <li><code>cd yomitoku-demo</code></li>
-                        <li><code>bash models/download_models.sh</code> でモデルをダウンロード</li>
-                        <li><code>python -m http.server 8000</code> でローカルサーバー起動</li>
+                        <li>リポジトリをクローン: <code>git clone https://github.com/s4na/yomitoku-demo.git</code></li>
+                        <li>ディレクトリに移動: <code>cd yomitoku-demo</code></li>
+                        <li>モデルをダウンロード: <code>bash models/download_models.sh</code></li>
+                        <li>ローカルサーバー起動: <code>python -m http.server 8000</code></li>
                         <li>ブラウザで <code>http://localhost:8000</code> にアクセス</li>
                     </ol>
 
-                    <h4>必要なモデルファイル:</h4>
+                    <h4>📦 必要なモデルファイル:</h4>
                     <ul>
-                        <li><code>models/text_detector.onnx</code> - テキスト検出モデル</li>
-                        <li><code>models/text_recognizer.onnx</code> - テキスト認識モデル</li>
+                        <li><code>models/text_detector.onnx</code> - テキスト検出モデル（DBNet）</li>
+                        <li><code>models/text_recognizer.onnx</code> - テキスト認識モデル（PARSeq）</li>
                     </ul>
 
-                    <p style="margin-bottom: 0;"><strong>注:</strong> GitHubPagesでの実行には、モデルファイルをリポジトリに含めるか、外部CDNから読み込む必要があります。現在この機能を準備中です。</p>
+                    <h4>☁️ GitHub Pagesで実行する場合:</h4>
+                    <p>モデルファイルをGitHub Releasesにアップロードする必要があります。詳細は<a href="https://github.com/s4na/yomitoku-demo/blob/main/models/README.md" target="_blank">models/README.md</a>を参照してください。</p>
+
+                    <h4>⚠️ 注意事項:</h4>
+                    <p>YomiTokuモデルはCC BY-NC-SA 4.0ライセンスです。非商用利用は無料ですが、商用利用には別途ライセンスが必要です。</p>
+                    <p>詳細: <a href="https://www.mlism.com/" target="_blank">MLism株式会社</a></p>
                 </div>
             `;
             resultSection.style.display = 'block';
