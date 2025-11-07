@@ -25,45 +25,52 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 📥 Download ONNX models from HuggingFace
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      - name: 🐍 Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 💾 Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}-yomitoku-torch
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: 📦 Install YomiToku
+        run: |
+          pip install yomitoku torch
+
+      - name: 📥 Export ONNX models
         run: |
           mkdir -p ./models
+          python3 << 'EOF'
+          import os
+          from yomitoku import DocumentAnalyzer
 
-          echo "📦 Downloading YomiToku ONNX models from HuggingFace..."
+          print("🔄 Exporting models for GitHub Pages...")
 
-          # Set authorization header if token is available
-          AUTH_HEADER=""
-          if [ -n "$HF_TOKEN" ]; then
-            echo "🔑 Using HuggingFace token for authentication"
-            AUTH_HEADER="-H \"Authorization: Bearer $HF_TOKEN\""
-          fi
+          # Initialize DocumentAnalyzer and access detector/recognizer through it
+          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
 
-          # Download text detector model
-          echo "⬇️ Downloading Text Detector..."
-          eval curl -L -f $AUTH_HEADER "https://huggingface.co/kotaro-kinoshita/yomitoku-text-detector-dbnet-v2/resolve/main/model.onnx" \
-            -o ./models/text_detector.onnx
+          print("📦 Exporting detector...")
+          analyzer.text_detector.infer_onnx = True
+          analyzer.text_detector.export_model_to_onnx("./models/text_detector.onnx")
+          print("✅ Detector exported")
 
-          # Download text recognizer model
-          echo "⬇️ Downloading Text Recognizer..."
-          eval curl -L -f $AUTH_HEADER "https://huggingface.co/kotaro-kinoshita/yomitoku-text-recognizer-parseq/resolve/main/model.onnx" \
-            -o ./models/text_recognizer.onnx
+          print("📦 Exporting recognizer...")
+          analyzer.text_recognizer.infer_onnx = True
+          analyzer.text_recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+          print("✅ Recognizer exported")
 
-          # Verify downloads
-          DETECTOR_SIZE=$(stat -c%s "./models/text_detector.onnx" 2>/dev/null || stat -f%z "./models/text_detector.onnx")
-          RECOGNIZER_SIZE=$(stat -c%s "./models/text_recognizer.onnx" 2>/dev/null || stat -f%z "./models/text_recognizer.onnx")
+          # Verify file sizes
+          detector_size = os.path.getsize("./models/text_detector.onnx")
+          recognizer_size = os.path.getsize("./models/text_recognizer.onnx")
 
-          echo "✅ Detector: $((DETECTOR_SIZE / 1024 / 1024))MB"
-          echo "✅ Recognizer: $((RECOGNIZER_SIZE / 1024 / 1024))MB"
-
-          # Check if files are large enough (> 1MB)
-          if [ "$DETECTOR_SIZE" -lt 1000000 ] || [ "$RECOGNIZER_SIZE" -lt 1000000 ]; then
-            echo "❌ Error: Downloaded files are too small"
-            exit 1
-          fi
-
-          echo "✅ All models downloaded successfully!"
+          print(f"✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
+          print(f"✅ Recognizer: {recognizer_size / 1024 / 1024:.2f} MB")
+          EOF
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
