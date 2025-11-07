@@ -53,25 +53,87 @@ class YomiTokuLite {
             // ONNX Runtime の設定
             ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
 
+            // モデルファイルの存在確認
+            const detectorPath = './models/text_detector.onnx';
+            const recognizerPath = './models/text_recognizer.onnx';
+
             // 検出モデル読み込み
             this.updateStatus('📥 テキスト検出モデル読み込み中...', 'loading');
-            this.detectorSession = await ort.InferenceSession.create('./models/text_detector.onnx', {
-                executionProviders: ['wasm']
-            });
+            try {
+                this.detectorSession = await ort.InferenceSession.create(detectorPath, {
+                    executionProviders: ['wasm']
+                });
+            } catch (err) {
+                console.error('検出モデルエラー:', err);
+                throw new Error('テキスト検出モデル (text_detector.onnx) が見つかりません。\n\nセットアップ手順:\n1. リポジトリをクローン\n2. models/download_models.sh を実行\n3. モデルファイルをmodelsディレクトリに配置');
+            }
 
             // 認識モデル読み込み
             this.updateStatus('📥 テキスト認識モデル読み込み中...', 'loading');
-            this.recognizerSession = await ort.InferenceSession.create('./models/text_recognizer.onnx', {
-                executionProviders: ['wasm']
-            });
+            try {
+                this.recognizerSession = await ort.InferenceSession.create(recognizerPath, {
+                    executionProviders: ['wasm']
+                });
+            } catch (err) {
+                console.error('認識モデルエラー:', err);
+                throw new Error('テキスト認識モデル (text_recognizer.onnx) が見つかりません。');
+            }
 
             this.isModelLoaded = true;
             this.updateStatus('✅ モデルの読み込みが完了しました！画像をアップロードしてください。', 'success');
             this.hideProgress();
         } catch (error) {
             console.error('モデル読み込みエラー:', error);
-            this.updateStatus('❌ モデルの読み込みに失敗しました: ' + error.message, 'error');
+            const errorMsg = error.message || 'Unknown error';
+
+            // ユーザーフレンドリーなエラーメッセージを表示
+            this.updateStatus(
+                '❌ モデルファイルが見つかりません\n\n' +
+                'YomiToku Liteを使用するには、ONNXモデルファイルが必要です。\n\n' +
+                '【解決方法】\n' +
+                'このデモは開発中です。モデルファイルのホスティング方法を準備中です。\n\n' +
+                'ローカルで実行する場合:\n' +
+                '1. リポジトリをクローン: git clone [repo-url]\n' +
+                '2. models/download_models.sh を実行\n' +
+                '3. ローカルサーバーで起動: python -m http.server 8000\n\n' +
+                '詳細エラー: ' + errorMsg,
+                'error'
+            );
             this.hideProgress();
+
+            // デバッグ情報
+            this.showModelDownloadInfo();
+        }
+    }
+
+    showModelDownloadInfo() {
+        // モデルダウンロード情報を表示する領域を追加
+        const resultSection = document.getElementById('resultSection');
+        if (resultSection) {
+            resultSection.innerHTML = `
+                <div style="padding: 20px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px; margin-top: 20px;">
+                    <h3 style="margin-top: 0; color: #856404;">📋 モデルセットアップが必要です</h3>
+                    <p>このデモを動作させるには、YomiTokuのONNXモデルファイルが必要です。</p>
+
+                    <h4>ローカルで実行する場合:</h4>
+                    <ol>
+                        <li>リポジトリをクローン</li>
+                        <li><code>cd yomitoku-demo</code></li>
+                        <li><code>bash models/download_models.sh</code> でモデルをダウンロード</li>
+                        <li><code>python -m http.server 8000</code> でローカルサーバー起動</li>
+                        <li>ブラウザで <code>http://localhost:8000</code> にアクセス</li>
+                    </ol>
+
+                    <h4>必要なモデルファイル:</h4>
+                    <ul>
+                        <li><code>models/text_detector.onnx</code> - テキスト検出モデル</li>
+                        <li><code>models/text_recognizer.onnx</code> - テキスト認識モデル</li>
+                    </ul>
+
+                    <p style="margin-bottom: 0;"><strong>注:</strong> GitHubPagesでの実行には、モデルファイルをリポジトリに含めるか、外部CDNから読み込む必要があります。現在この機能を準備中です。</p>
+                </div>
+            `;
+            resultSection.style.display = 'block';
         }
     }
 
