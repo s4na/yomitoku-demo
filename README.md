@@ -183,11 +183,44 @@ git push origin main
 2. `Settings` → `Pages` で Source が「GitHub Actions」になっているか確認
 3. リポジトリの権限設定を確認
 
-### モデルが読み込めない場合
+### ⚠️ モデルが読み込めない場合
 
+**エラー**: `❌ モデルの読み込みに失敗しました: failed to load external data file: ./models/text_detector.onnx`
+
+**原因**: モデルファイルがダウンロードされていないか、GitHubPagesに含まれていません。
+
+**解決方法**:
+
+#### オプション 1: ローカルで実行する
+
+```bash
+# 1. リポジトリをクローン
+git clone https://github.com/s4na/yomitoku-demo.git
+cd yomitoku-demo
+
+# 2. モデルをダウンロード
+bash models/download_models.sh
+
+# 3. ローカルサーバーを起動
+python -m http.server 8000
+
+# 4. ブラウザでアクセス
+# http://localhost:8000
+```
+
+#### オプション 2: GitHub Actionsでデプロイ
+
+モデルは GitHub Actions の実行時に自動的にダウンロードされ、GitHub Pages にデプロイされます。
+ワークフローが正常に完了していることを確認してください。
+
+**確認事項**:
 - ブラウザのコンソールでエラーを確認
-- モデルファイルのパスが正しいか確認
-- CORS設定を確認
+- モデルファイルのパスが正しいか確認 (`./models/text_detector.onnx`, `./models/text_recognizer.onnx`)
+- GitHub Actions のログでモデルダウンロードステップが成功しているか確認
+- CORS設定を確認（GitHub Pages では通常問題なし）
+
+**注意**: 現在、YomiTokuの公式ONNXモデルへのアクセスに問題がある可能性があります。
+この場合、代替のモデルソースを使用するか、モデルを手動で配置する必要があります。
 
 ## 📚 参考リンク
 
