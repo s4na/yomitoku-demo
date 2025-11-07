@@ -116,12 +116,45 @@ jobs:
         uses: actions/deploy-pages@v4
 ```
 
-### 3. GitHub Pages の有効化
+### 3. HuggingFace アクセストークンの設定
+
+ONNXモデルをHuggingFaceからダウンロードするために、アクセストークンが必要です。
+
+#### 3.1 HuggingFaceトークンの取得
+
+1. https://huggingface.co/settings/tokens にアクセス
+2. **Create new token** をクリック
+3. 以下の設定でトークンを作成:
+   - **Token type**: Fine-grained
+   - **Token name**: 任意の名前（例: `yomitoku-demo`）
+   - **Repositories permissions**:
+     - `kotaro-kinoshita/yomitoku-text-detector-dbnet-v2`
+     - `kotaro-kinoshita/yomitoku-text-recognizer-parseq`
+   - **必要な権限**: "Read access to contents of selected repos"
+4. トークンをコピー（`hf_...` で始まる文字列）
+
+#### 3.2 GitHubリポジトリにトークンを設定
+
+**方法1: GitHub CLI（推奨）**
+
+```bash
+gh secret set HF_TOKEN --body "hf_xxxxxxxxxxxxxxxxxx"
+```
+
+**方法2: GitHubウェブUI**
+
+1. GitHubリポジトリの **Settings** → **Secrets and variables** → **Actions** に移動
+2. **New repository secret** をクリック
+3. **Name**: `HF_TOKEN`
+4. **Secret**: HuggingFaceで取得したトークンを貼り付け
+5. **Add secret** をクリック
+
+### 4. GitHub Pages の有効化
 
 1. GitHub リポジトリの **Settings** → **Pages** に移動
 2. **Source** を「GitHub Actions」に設定
 
-### 4. デプロイ
+### 5. デプロイ
 
 ```bash
 git add .github/workflows/deploy.yml
@@ -182,6 +215,22 @@ git push origin main
 ## 🐛 トラブルシューティング
 
 ### デプロイが失敗する場合
+
+#### 401 Unauthorized エラー（HuggingFace）
+
+**症状**: GitHub Actionsで "The requested URL returned error: 401" というエラーが出る
+
+**原因**: HuggingFaceのモデルリポジトリへのアクセスに認証が必要です
+
+**解決方法**:
+1. 上記の「3. HuggingFace アクセストークンの設定」を参照
+2. `HF_TOKEN` シークレットが正しく設定されているか確認:
+   ```bash
+   gh secret list
+   ```
+3. トークンの権限を確認（Read access to contents が必要）
+
+#### その他のデプロイエラー
 
 1. GitHub Actions のログを確認
 2. `Settings` → `Pages` で Source が「GitHub Actions」になっているか確認
