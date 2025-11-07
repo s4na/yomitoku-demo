@@ -26,11 +26,15 @@ yomitoku-demo/
 ├─ main.js                 # OCR処理のJavaScript実装
 ├─ style.css               # スタイルシート
 ├─ models/
-│   └─ download_models.sh  # ONNXモデルダウンロードスクリプト
-├─ .github/
+│   ├─ download_models.sh  # ONNXモデルダウンロードスクリプト
+│   └─ README.md           # モデルセットアップ詳細ガイド
+├─ github/                 # .githubにリネームして使用
+│   ├─ workflows/
+│   │   └─ release-models.yml  # モデルリリースワークフロー
+│   └─ README.md           # GitHub Actions詳細ガイド
+├─ .github/                # GitHub Actions設定（デプロイ用）
 │   └─ workflows/
-│        └─ deploy.yml     # GitHub Actions設定
-├─ package.json            # npm設定（オプション）
+│        └─ deploy.yml     # GitHub Pages自動デプロイ
 └─ README.md
 ```
 
@@ -244,12 +248,11 @@ GitHub Actionsを使って、モデルファイルを自動的にGitHub Releases
 
 **セットアップ手順**:
 
-1. ワークフローファイルを配置:
+1. `github` ディレクトリを `.github` にリネーム:
    ```bash
-   mkdir -p .github/workflows
-   cp workflows-templates/release-models.yml .github/workflows/
-   git add .github/workflows/release-models.yml
-   git commit -m "Add model release workflow"
+   mv github .github
+   git add .github/
+   git commit -m "Add GitHub Actions workflow"
    git push
    ```
 
@@ -267,7 +270,7 @@ GitHub Actionsを使って、モデルファイルを自動的にGitHub Releases
 - GitHub Releasesに自動アップロード
 - `main.js` が自動的にこのリリースからモデルを読み込む
 
-ワークフローテンプレート: [`workflows-templates/release-models.yml`](workflows-templates/release-models.yml)
+詳細: [`github/README.md`](github/README.md)
 
 **トラブルシューティング**:
 - ブラウザのコンソールでエラーを確認
