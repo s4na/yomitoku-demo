@@ -286,33 +286,62 @@ GitHub Actionsを使って、モデルファイルを自動的にGitHub Releases
 
 ## 📄 ライセンス
 
-このプロジェクトは、**コード**と**モデル**で異なるライセンスが適用されます：
+⚠️ **重要**: このプロジェクトは **2つの異なるライセンス** で構成されています。
 
-### デモアプリケーションコード
+### ライセンス概要
 
-このリポジトリのコード（HTML、JavaScript、CSS等）は **MIT License** でライセンスされています。
+| 対象 | ライセンス | 商用利用 | 場所 |
+|------|-----------|---------|------|
+| **このGitHubリポジトリのコード** | MIT License | ✅ 可能 | このリポジトリ内 |
+| **YomiToku ONNXモデル** | CC BY-NC-SA 4.0 | ❌ 別途ライセンス必要 | 別途入手 |
+
+---
+
+### 1. GitHubリポジトリのコード（MIT License）
+
+このリポジトリに含まれる**すべてのコード**（HTML、JavaScript、CSS、シェルスクリプト等）は **MIT License** です。
 
 ```
+MIT License
 Copyright (c) 2025 s4na
 ```
 
-詳細は [LICENSE](LICENSE) ファイルを参照してください。
+- ✅ 商用利用可能
+- ✅ 改変・再配布自由
+- ✅ 無料
 
-### YomiToku ONNXモデル
+詳細: [LICENSE](LICENSE) ファイル
 
-YomiTokuモデルは **CC BY-NC-SA 4.0** ライセンスで提供されています：
+### 2. YomiToku ONNXモデル（CC BY-NC-SA 4.0）
 
+モデルファイル（`text_detector.onnx`, `text_recognizer.onnx`）は **別ライセンス** です。
+
+**重要**:
+- ❌ モデルファイルはこのリポジトリに含まれていません
+- ❌ モデルファイルは別途入手が必要です
+- ⚠️ モデルのライセンスはこのリポジトリのMITライセンスとは**別**です
+
+**モデルライセンス**: CC BY-NC-SA 4.0
 - ✅ **個人利用**: 無料
 - ✅ **研究目的**: 無料
 - ✅ **非商用プロジェクト**: 無料
-- ❌ **商用利用**: 別途ライセンスが必要（[MLism株式会社](https://www.mlism.com/)に問い合わせ）
+- ❌ **商用利用**: 別途ライセンスが必要 → [MLism株式会社](https://www.mlism.com/)に問い合わせ
 
-**重要**: モデルファイルはこのリポジトリには含まれていません。モデルを使用する際は、上記のCC BY-NC-SA 4.0ライセンス条件に従う必要があります。
-
-モデルの詳細:
+モデルの提供元:
 - ライセンス: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-- 提供元: [YomiToku](https://github.com/kotaro-kinoshita/yomitoku)
-- 商用利用: https://www.mlism.com/
+- プロジェクト: [YomiToku](https://github.com/kotaro-kinoshita/yomitoku)
+- 商用ライセンス: https://www.mlism.com/
+
+---
+
+### ⚠️ 使用時の注意
+
+このデモアプリケーションを使用する場合：
+
+1. **コードのみ使用（モデルなし）**: MIT Licenseに従う
+2. **コード + YomiTokuモデルを使用**: 両方のライセンス（MIT + CC BY-NC-SA 4.0）に従う必要があります
+
+商用利用する場合は、YomiTokuモデルの商用ライセンスが必要です。
 
 ## 🤝 コントリビューション
 
