@@ -26,11 +26,15 @@ yomitoku-demo/
 ├─ main.js                 # OCR処理のJavaScript実装
 ├─ style.css               # スタイルシート
 ├─ models/
-│   └─ download_models.sh  # ONNXモデルダウンロードスクリプト
-├─ .github/
+│   ├─ download_models.sh  # ONNXモデルダウンロードスクリプト
+│   └─ README.md           # モデルセットアップ詳細ガイド
+├─ github/                 # .githubにリネームして使用
+│   ├─ workflows/
+│   │   └─ release-models.yml  # モデルリリースワークフロー
+│   └─ README.md           # GitHub Actions詳細ガイド
+├─ .github/                # GitHub Actions設定（デプロイ用）
 │   └─ workflows/
-│        └─ deploy.yml     # GitHub Actions設定
-├─ package.json            # npm設定（オプション）
+│        └─ deploy.yml     # GitHub Pages自動デプロイ
 └─ README.md
 ```
 
@@ -185,42 +189,94 @@ git push origin main
 
 ### ⚠️ モデルが読み込めない場合
 
-**エラー**: `❌ モデルの読み込みに失敗しました: failed to load external data file: ./models/text_detector.onnx`
+**エラー**: `❌ モデルの読み込みに失敗しました`
 
-**原因**: モデルファイルがダウンロードされていないか、GitHubPagesに含まれていません。
+**原因**: モデルファイルがダウンロードされていないか、HuggingFaceのモデルへのアクセスが制限されています。
 
 **解決方法**:
 
-#### オプション 1: ローカルで実行する
+#### オプション 1: YomiToku Pythonパッケージを使用（推奨）
 
 ```bash
 # 1. リポジトリをクローン
 git clone https://github.com/s4na/yomitoku-demo.git
 cd yomitoku-demo
 
-# 2. モデルをダウンロード
-bash models/download_models.sh
+# 2. YomiTokuをインストール
+pip install yomitoku
 
-# 3. ローカルサーバーを起動
+# 3. モデルをエクスポート
+python3 << 'EOF'
+from yomitoku import DocumentAnalyzer
+
+analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+
+# モデルをONNX形式でエクスポート
+detector = analyzer.detector
+detector.infer_onnx = True
+detector.export_model_to_onnx("./models/text_detector.onnx")
+
+recognizer = analyzer.recognizer
+recognizer.infer_onnx = True
+recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+
+print("✅ Models exported successfully!")
+EOF
+
+# 4. ローカルサーバーを起動
 python -m http.server 8000
 
-# 4. ブラウザでアクセス
+# 5. ブラウザでアクセス
 # http://localhost:8000
 ```
 
-#### オプション 2: GitHub Actionsでデプロイ
+#### オプション 2: 自動ダウンロードスクリプト（実験的）
 
-モデルは GitHub Actions の実行時に自動的にダウンロードされ、GitHub Pages にデプロイされます。
-ワークフローが正常に完了していることを確認してください。
+```bash
+git clone https://github.com/s4na/yomitoku-demo.git
+cd yomitoku-demo
+bash models/download_models.sh  # HuggingFaceから直接ダウンロード
+python -m http.server 8000
+```
 
-**確認事項**:
+**注意**: HuggingFaceのモデルへのアクセスに制限がある場合、このスクリプトは失敗します。
+その場合はオプション1を使用してください。
+
+#### オプション 3: GitHub Actionsで自動リリース（推奨・GitHub Pages用）
+
+GitHub Actionsを使って、モデルファイルを自動的にGitHub Releasesにアップロードできます。
+
+**セットアップ手順**:
+
+1. `github` ディレクトリを `.github` にリネーム:
+   ```bash
+   mv github .github
+   git add .github/
+   git commit -m "Add GitHub Actions workflow"
+   git push
+   ```
+
+2. GitHubリポジトリの **Actions** タブに移動
+
+3. 左サイドバーから **Release ONNX Models** ワークフローを選択
+
+4. **Run workflow** ボタンをクリックして実行
+
+ワークフローが完了すると（約5-10分）、モデルファイルが `models-v1` リリースに自動的にアップロードされ、GitHub Pagesで利用可能になります。
+
+**仕組み**:
+- YomiToku Pythonパッケージをインストール
+- モデルをONNX形式でエクスポート（約20-30MB）
+- GitHub Releasesに自動アップロード
+- `main.js` が自動的にこのリリースからモデルを読み込む
+
+詳細: [`github/README.md`](github/README.md)
+
+**トラブルシューティング**:
 - ブラウザのコンソールでエラーを確認
-- モデルファイルのパスが正しいか確認 (`./models/text_detector.onnx`, `./models/text_recognizer.onnx`)
+- モデルファイルのサイズを確認: `ls -lh models/*.onnx`（1MB以上であること）
 - GitHub Actions のログでモデルダウンロードステップが成功しているか確認
-- CORS設定を確認（GitHub Pages では通常問題なし）
-
-**注意**: 現在、YomiTokuの公式ONNXモデルへのアクセスに問題がある可能性があります。
-この場合、代替のモデルソースを使用するか、モデルを手動で配置する必要があります。
+- 詳細なセットアップ手順: [`models/README.md`](models/README.md)
 
 ## 📚 参考リンク
 
@@ -230,7 +286,78 @@ python -m http.server 8000
 
 ## 📄 ライセンス
 
+⚠️ **重要**: このプロジェクトは **2つの異なるライセンス** で構成されています。
+
+### ライセンス概要
+
+| 対象 | ライセンス | 商用利用 | 場所 |
+|------|-----------|---------|------|
+| **このGitHubリポジトリのコード** | MIT License | ✅ 可能 | このリポジトリ内 |
+| **YomiToku ONNXモデル** | CC BY-NC-SA 4.0 | ❌ 別途ライセンス必要 | 別途入手 |
+
+---
+
+### 1. GitHubリポジトリのコード（MIT License）
+
+このリポジトリに含まれる**すべてのコード**（HTML、JavaScript、CSS、シェルスクリプト等）は **MIT License** です。
+
+```
 MIT License
+Copyright (c) 2025 s4na
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+- ✅ 商用利用可能
+- ✅ 改変・再配布自由
+- ✅ 無料
+
+### 2. YomiToku ONNXモデル（CC BY-NC-SA 4.0）
+
+モデルファイル（`text_detector.onnx`, `text_recognizer.onnx`）は **別ライセンス** です。
+
+**重要**:
+- ❌ モデルファイルはこのリポジトリに含まれていません
+- ❌ モデルファイルは別途入手が必要です
+- ⚠️ モデルのライセンスはこのリポジトリのMITライセンスとは**別**です
+
+**モデルライセンス**: CC BY-NC-SA 4.0
+- ✅ **個人利用**: 無料
+- ✅ **研究目的**: 無料
+- ✅ **非商用プロジェクト**: 無料
+- ❌ **商用利用**: 別途ライセンスが必要 → [MLism株式会社](https://www.mlism.com/)に問い合わせ
+
+モデルの提供元:
+- ライセンス: [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+- プロジェクト: [YomiToku](https://github.com/kotaro-kinoshita/yomitoku)
+- 商用ライセンス: https://www.mlism.com/
+
+---
+
+### ⚠️ 使用時の注意
+
+このデモアプリケーションを使用する場合：
+
+1. **コードのみ使用（モデルなし）**: MIT Licenseに従う
+2. **コード + YomiTokuモデルを使用**: 両方のライセンス（MIT + CC BY-NC-SA 4.0）に従う必要があります
+
+商用利用する場合は、YomiTokuモデルの商用ライセンスが必要です。
 
 ## 🤝 コントリビューション
 
