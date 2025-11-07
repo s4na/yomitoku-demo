@@ -9,7 +9,8 @@
 ```
 github/
 ├── workflows/
-│   └── release-models.yml  # モデルリリースワークフロー
+│   ├── deploy.yml           # GitHub Pages デプロイワークフロー（更新版）
+│   └── release-models.yml   # モデルリリースワークフロー
 └── README.md
 ```
 
@@ -42,9 +43,41 @@ git push
 
 ## 📋 ワークフロー詳細
 
+### deploy.yml（更新版・推奨）
+
+**CORS問題を解決した改善版のデプロイワークフロー**です。
+
+GitHub Pages デプロイ時にYomiTokuモデルを自動的にエクスポートして含めます。
+
+**機能**:
+- GitHub Pagesへの自動デプロイ（mainブランチへのpush時）
+- YomiToku Pythonパッケージをインストール
+- テキスト検出モデル（DBNet）をONNX形式でエクスポート
+- テキスト認識モデル（PARSeq）をONNX形式でエクスポート
+- モデルファイルをGitHub Pagesアーティファクトに含める（CORS問題解決）
+
+**重要**: この更新版ワークフローは、GitHub Releases fallbackのCORS問題を解決します。
+モデルファイルがGitHub Pagesと同一オリジンに配置されるため、ブラウザから正常にロードできます。
+
+**既存の `.github/workflows/deploy.yml` を更新する場合**:
+```bash
+# このテンプレートで既存のワークフローを上書き
+cp github/workflows/deploy.yml .github/workflows/deploy.yml
+git add .github/workflows/deploy.yml
+git commit -m "fix: Update deploy workflow to export ONNX models (CORS fix)"
+git push
+```
+
+**実行時間**: 約3-5分（モデルエクスポート含む）
+
+---
+
 ### release-models.yml
 
 YomiToku ONNXモデルを自動的にGitHub Releasesにアップロードするワークフローです。
+
+**注意**: GitHub ReleasesからのモデルロードはCORSエラーで失敗します。
+このワークフローはオプションです。deploy.ymlを使用することを推奨します。
 
 **機能**:
 - YomiToku Pythonパッケージをインストール
