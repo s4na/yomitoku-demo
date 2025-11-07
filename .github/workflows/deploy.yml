@@ -47,29 +47,89 @@ jobs:
           mkdir -p ./models
           python3 << 'EOF'
           import os
-          from yomitoku import DocumentAnalyzer
+          import sys
 
           print("🔄 Exporting models for GitHub Pages...")
 
-          # Initialize DocumentAnalyzer and access detector/recognizer through it
-          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+          # Check YomiToku version
+          import yomitoku
+          print(f"YomiToku version: {yomitoku.__version__ if hasattr(yomitoku, '__version__') else 'unknown'}")
 
-          print("📦 Exporting detector...")
-          analyzer.text_detector.infer_onnx = True
-          analyzer.text_detector.export_model_to_onnx("./models/text_detector.onnx")
-          print("✅ Detector exported")
+          success = False
 
-          print("📦 Exporting recognizer...")
-          analyzer.text_recognizer.infer_onnx = True
-          analyzer.text_recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
-          print("✅ Recognizer exported")
+          # Method 1: Try using infer_onnx flag (current API in some versions)
+          if not success:
+              try:
+                  print("\n📦 Method 1: Using DocumentAnalyzer with infer_onnx flag...")
+                  from yomitoku import DocumentAnalyzer
+
+                  analyzer = DocumentAnalyzer(configs={"device": "cpu", "infer_onnx": True})
+
+                  # Try to access the models and export
+                  if hasattr(analyzer, 'text_detector'):
+                      print("  Exporting text_detector...")
+                      analyzer.text_detector.model_manager.model.export_to_onnx("./models/text_detector.onnx")
+                      print("  ✅ text_detector exported")
+
+                  if hasattr(analyzer, 'text_recognizer'):
+                      print("  Exporting text_recognizer...")
+                      analyzer.text_recognizer.model_manager.model.export_to_onnx("./models/text_recognizer.onnx")
+                      print("  ✅ text_recognizer exported")
+
+                  if os.path.exists("./models/text_detector.onnx") and os.path.exists("./models/text_recognizer.onnx"):
+                      success = True
+                      print("✅ Method 1 succeeded!")
+              except Exception as e:
+                  print(f"  ❌ Method 1 failed: {e}")
+
+          # Method 2: Direct module import
+          if not success:
+              try:
+                  print("\n📦 Method 2: Direct module import...")
+                  from yomitoku.text_detector.v2.text_detector import TextDetector
+                  from yomitoku.text_recognizer.text_recognizer import TextRecognizer
+
+                  detector = TextDetector(configs={"device": "cpu"})
+                  if hasattr(detector, 'model_manager'):
+                      detector.model_manager.model.export_to_onnx("./models/text_detector.onnx")
+                  else:
+                      detector.model.export_to_onnx("./models/text_detector.onnx")
+                  print("  ✅ text_detector exported")
+
+                  recognizer = TextRecognizer(configs={"device": "cpu"})
+                  if hasattr(recognizer, 'model_manager'):
+                      recognizer.model_manager.model.export_to_onnx("./models/text_recognizer.onnx")
+                  else:
+                      recognizer.model.export_to_onnx("./models/text_recognizer.onnx")
+                  print("  ✅ text_recognizer exported")
+
+                  success = True
+                  print("✅ Method 2 succeeded!")
+              except Exception as e:
+                  print(f"  ❌ Method 2 failed: {e}")
+
+          if not success:
+              print("\n❌ All export methods failed. Inspecting API...")
+              from yomitoku import DocumentAnalyzer
+              analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+              print("\nAvailable analyzer attributes:")
+              for attr in dir(analyzer):
+                  if not attr.startswith('_'):
+                      print(f"  - {attr}")
+              if hasattr(analyzer, 'text_detector'):
+                  print("\ntext_detector attributes:")
+                  for attr in dir(analyzer.text_detector):
+                      if 'export' in attr.lower() or 'onnx' in attr.lower():
+                          print(f"  - {attr}")
+              sys.exit(1)
 
           # Verify file sizes
           detector_size = os.path.getsize("./models/text_detector.onnx")
           recognizer_size = os.path.getsize("./models/text_recognizer.onnx")
 
-          print(f"✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
+          print(f"\n✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
           print(f"✅ Recognizer: {recognizer_size / 1024 / 1024:.2f} MB")
+          print("✅ All models exported successfully!")
           EOF
 
       - name: Setup Pages
