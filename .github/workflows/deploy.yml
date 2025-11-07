@@ -36,27 +36,41 @@ jobs:
 
       - name: 📥 Export ONNX models
         run: |
+          mkdir -p ./models
           python3 << 'EOF'
-          from yomitoku import DocumentAnalyzer
+          import yomitoku
           import os
 
           print("🔄 Exporting models for GitHub Pages...")
-          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
 
-          # Export detector
-          detector = analyzer.detector
-          detector.infer_onnx = True
-          detector.export_model_to_onnx("./models/text_detector.onnx")
+          # Try the new API first
+          try:
+              yomitoku.export_onnx_models('./models')
+              print("✅ Models exported using yomitoku.export_onnx_models()")
+          except AttributeError:
+              # Fallback to old API
+              print("⚠️ Trying fallback method...")
+              from yomitoku import DocumentAnalyzer
 
+              analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+
+              # Export detector
+              detector = analyzer.detector
+              detector.infer_onnx = True
+              detector.export_model_to_onnx("./models/text_detector.onnx")
+
+              # Export recognizer
+              recognizer = analyzer.recognizer
+              recognizer.infer_onnx = True
+              recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
+
+              print("✅ Models exported using fallback method")
+
+          # Verify file sizes
           detector_size = os.path.getsize("./models/text_detector.onnx")
-          print(f"✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
-
-          # Export recognizer
-          recognizer = analyzer.recognizer
-          recognizer.infer_onnx = True
-          recognizer.export_model_to_onnx("./models/text_recognizer.onnx")
-
           recognizer_size = os.path.getsize("./models/text_recognizer.onnx")
+
+          print(f"✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
           print(f"✅ Recognizer: {recognizer_size / 1024 / 1024:.2f} MB")
           EOF
 
