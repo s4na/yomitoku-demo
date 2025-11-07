@@ -4,6 +4,8 @@
 
 完全無料・ブラウザ上で動作する日本語OCRデモアプリケーション
 
+🌐 **デモサイト**: https://s4na.github.io/yomitoku-demo/
+
 ## 📖 概要
 
 YomiToku Lite は、ONNX Runtime Web を使用してブラウザ上で完全に動作する日本語OCRシステムです。
@@ -144,7 +146,7 @@ git push origin main
 
 ## 🎯 使い方
 
-1. デプロイされたサイトにアクセス
+1. デプロイされたサイトにアクセス: https://s4na.github.io/yomitoku-demo/
 2. 画像をアップロード（ドラッグ&ドロップまたはクリック）
 3. 自動的にテキスト検出・認識が実行されます
 4. 結果が画像とテキストで表示されます
