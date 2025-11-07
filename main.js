@@ -53,53 +53,21 @@ class YomiTokuLite {
             // ONNX Runtime の設定
             ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.17.0/dist/';
 
-            // モデルパスの候補（優先順位順）
-            const modelSources = [
-                {
-                    name: 'ローカルファイル',
-                    detector: './models/text_detector.onnx',
-                    recognizer: './models/text_recognizer.onnx'
-                },
-                {
-                    name: 'GitHub Releases',
-                    detector: 'https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_detector.onnx',
-                    recognizer: 'https://github.com/s4na/yomitoku-demo/releases/download/models-v1/text_recognizer.onnx'
-                }
-            ];
+            // モデルパス
+            const detectorPath = './models/text_detector.onnx';
+            const recognizerPath = './models/text_recognizer.onnx';
 
-            let loadSuccess = false;
-            let lastError = null;
+            // 検出モデル読み込み
+            this.updateStatus('📥 テキスト検出モデル読み込み中...', 'loading');
+            this.detectorSession = await ort.InferenceSession.create(detectorPath, {
+                executionProviders: ['wasm']
+            });
 
-            // 各ソースを順番に試す
-            for (const source of modelSources) {
-                try {
-                    console.log(`モデル読み込み試行: ${source.name}`);
-
-                    // 検出モデル読み込み
-                    this.updateStatus(`📥 テキスト検出モデル読み込み中 (${source.name})...`, 'loading');
-                    this.detectorSession = await ort.InferenceSession.create(source.detector, {
-                        executionProviders: ['wasm']
-                    });
-
-                    // 認識モデル読み込み
-                    this.updateStatus(`📥 テキスト認識モデル読み込み中 (${source.name})...`, 'loading');
-                    this.recognizerSession = await ort.InferenceSession.create(source.recognizer, {
-                        executionProviders: ['wasm']
-                    });
-
-                    console.log(`✅ モデル読み込み成功: ${source.name}`);
-                    loadSuccess = true;
-                    break;
-                } catch (err) {
-                    console.warn(`${source.name}からの読み込み失敗:`, err);
-                    lastError = err;
-                    continue;
-                }
-            }
-
-            if (!loadSuccess) {
-                throw new Error('すべてのモデルソースからの読み込みに失敗しました');
-            }
+            // 認識モデル読み込み
+            this.updateStatus('📥 テキスト認識モデル読み込み中...', 'loading');
+            this.recognizerSession = await ort.InferenceSession.create(recognizerPath, {
+                executionProviders: ['wasm']
+            });
 
             this.isModelLoaded = true;
             this.updateStatus('✅ モデルの読み込みが完了しました！画像をアップロードしてください。', 'success');
