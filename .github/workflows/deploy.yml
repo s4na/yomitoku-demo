@@ -42,13 +42,15 @@ jobs:
         run: |
           pip install yomitoku torch
 
-      - name: 📥 Export ONNX models
+      - name: 📥 Get ONNX models from YomiToku cache
         run: |
           mkdir -p ./models
           python3 << 'EOF'
           import os
+          import shutil
+          from pathlib import Path
 
-          print("🔄 Exporting models for GitHub Pages...")
+          print("🔄 Getting ONNX models from YomiToku...")
 
           # Check YomiToku version
           import yomitoku
@@ -56,19 +58,71 @@ jobs:
 
           from yomitoku import DocumentAnalyzer
 
-          # Initialize analyzer
-          print("\n📦 Initializing DocumentAnalyzer...")
-          analyzer = DocumentAnalyzer(configs={"device": "cpu"})
+          # Initialize analyzer with infer_onnx=True to trigger ONNX model download
+          print("\n📦 Initializing DocumentAnalyzer with ONNX inference mode...")
+          analyzer = DocumentAnalyzer(configs={"device": "cpu", "infer_onnx": True})
+          print("✅ DocumentAnalyzer initialized")
 
-          # Export text_detector using convert_onnx method
-          print("📦 Exporting text_detector...")
-          analyzer.text_detector.convert_onnx("./models/text_detector.onnx")
-          print("✅ text_detector exported")
+          # Find the cached ONNX models
+          print("\n🔍 Looking for cached ONNX models...")
 
-          # Export text_recognizer using convert_onnx method
-          print("📦 Exporting text_recognizer...")
-          analyzer.text_recognizer.convert_onnx("./models/text_recognizer.onnx")
-          print("✅ text_recognizer exported")
+          # Check HuggingFace cache directory
+          home = Path.home()
+          hf_cache = home / ".cache" / "huggingface" / "hub"
+
+          detector_found = False
+          recognizer_found = False
+
+          if hf_cache.exists():
+              print(f"📂 Searching in: {hf_cache}")
+              # Search for ONNX files in HuggingFace cache
+              for onnx_file in hf_cache.rglob("*.onnx"):
+                  filename = onnx_file.name
+                  if "detector" in str(onnx_file).lower() and not detector_found:
+                      print(f"  Found detector: {onnx_file}")
+                      shutil.copy2(onnx_file, "./models/text_detector.onnx")
+                      detector_found = True
+                  elif "recognizer" in str(onnx_file).lower() and not recognizer_found:
+                      print(f"  Found recognizer: {onnx_file}")
+                      shutil.copy2(onnx_file, "./models/text_recognizer.onnx")
+                      recognizer_found = True
+
+                  if detector_found and recognizer_found:
+                      break
+
+          # If not found in HF cache, try torch hub cache
+          if not (detector_found and recognizer_found):
+              torch_cache = home / ".cache" / "torch" / "hub"
+              if torch_cache.exists():
+                  print(f"📂 Searching in: {torch_cache}")
+                  for onnx_file in torch_cache.rglob("*.onnx"):
+                      filename = onnx_file.name
+                      if "detector" in str(onnx_file).lower() and not detector_found:
+                          print(f"  Found detector: {onnx_file}")
+                          shutil.copy2(onnx_file, "./models/text_detector.onnx")
+                          detector_found = True
+                      elif "recognizer" in str(onnx_file).lower() and not recognizer_found:
+                          print(f"  Found recognizer: {onnx_file}")
+                          shutil.copy2(onnx_file, "./models/text_recognizer.onnx")
+                          recognizer_found = True
+
+                      if detector_found and recognizer_found:
+                          break
+
+          if not detector_found or not recognizer_found:
+              print("\n❌ Could not find ONNX models in cache")
+              print("Available cache locations searched:")
+              print(f"  - {hf_cache}")
+              print(f"  - {torch_cache}")
+
+              # List all ONNX files found
+              print("\nAll .onnx files found:")
+              for cache_dir in [hf_cache, torch_cache]:
+                  if cache_dir.exists():
+                      for f in cache_dir.rglob("*.onnx"):
+                          print(f"  - {f}")
+
+              raise FileNotFoundError("ONNX models not found in cache")
 
           # Verify file sizes
           detector_size = os.path.getsize("./models/text_detector.onnx")
@@ -76,7 +130,7 @@ jobs:
 
           print(f"\n✅ Detector: {detector_size / 1024 / 1024:.2f} MB")
           print(f"✅ Recognizer: {recognizer_size / 1024 / 1024:.2f} MB")
-          print("✅ All models exported successfully!")
+          print("✅ All models retrieved successfully!")
           EOF
 
       - name: Setup Pages
